@@ -1,4 +1,13 @@
-
-.idea/
 __pycache__/
-*.pyc
+log/
+logs/
+user_file/*
+.vscode/
+venv/
+cache/
+pgdata/
+.env
+hosts/
+www/
+README 2.md
+.venv/
