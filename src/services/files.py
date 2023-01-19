@@ -1,7 +1,6 @@
-from models.files import FileModel
+from models.orm_models import FileModel
 from schemas.files import FileCreate
-
-from .base import RepositoryDBFile
+from services.file_repository import RepositoryDBFile
 
 
 class RepositoryFile(RepositoryDBFile[FileModel, FileCreate]):

@@ -3,12 +3,12 @@ from typing import Optional
 
 from pydantic import UUID4, BaseModel, Field, validator
 
+from schemas import ConfigORM
 
-class BaseWithORM(BaseModel):
+
+class BaseWithORM(ConfigORM):
+
     name: str
-
-    class Config:
-        orm_model = True
 
 
 class UserCreate(BaseWithORM):
@@ -20,23 +20,23 @@ class UserInDB(BaseWithORM):
 
 
 class UserBase(BaseWithORM):
-    id: int
+    id: int    # noqa A0003
 
 
-class UserRedis(UserBase):
+class CachedUser(UserBase):
     is_active: bool
 
 
 class UserToken(BaseModel):
-    token: UUID4 = Field(..., alias="access_token")
-    expires: datetime
-    token_type: Optional[str] = 'bearer'
 
     class Config:
-        orm_model = True
         allow_population_by_field_name = True
 
-        @validator("token")
+        @validator('token')
         def hexlify_token(cls, value):
-            """Конвертирует UUID в hex строку"""
+            """ Конвертирует UUID в hex строку """
             return value.hex
+
+    token: UUID4 = Field(..., alias='access_token')
+    expires: datetime
+    token_type: Optional[str] = 'bearer'

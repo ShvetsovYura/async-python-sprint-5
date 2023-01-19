@@ -1,15 +1,17 @@
-import time
 from typing import Union
 
 from fastapi import APIRouter, Depends, File, UploadFile, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi_pagination import Page, paginate
 from fastapi_pagination.ext.sqlalchemy import AbstractPage  # type: ignore
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from core.config import re_cli
+from core.exceptions import (FileNotCreatedError, FileNotFoundHttpError,
+                             FileNotFoundInStorageError, InternalServerErrorHttpError,
+                             UpladedFileExceedError)
 from db.db import get_session
-from models.users import UsersTable as User
+from models.orm_models import FileModel, UserModel
 from schemas.files import FileInDB, UploadResponse
 from services.files import files_crud
 from services.users import get_current_user
@@ -17,34 +19,14 @@ from services.users import get_current_user
 router = APIRouter()
 
 
-@router.get('/ping', description='Checks the availability of services.')
-async def get_ping(
-        db: AsyncSession = Depends(get_session),    # noqa B008
-        user: User = Depends(get_current_user),    # noqa B008
-) -> dict:
-    start_time = time.time()
-    await files_crud.get(db=db, user=user)
-    ping_db = time.time() - start_time
-    start_time = time.time()
-    re_cli.get('nothing')
-    ping_redis = time.time() - start_time
-    return {
-        'datebase': "{:.4f}".format(ping_db),    # noqa Q000
-        'redis': "{:.4f}".format(ping_redis),    # noqa Q000
-        'user': {
-            'name': user.name,
-            'id': user.id,
-        },
-    }
-
-
 @router.get('/list', response_model=Page[FileInDB], description='Get user file list.')
 async def get_files_list(
-        db: AsyncSession = Depends(get_session),    # noqa B008
-        user: User = Depends(get_current_user),    # noqa B008
+        db: AsyncSession = Depends(get_session),
+        user: UserModel = Depends(get_current_user),
 ) -> AbstractPage:
-    files = await files_crud.get(db=db, user=user)
-    return paginate(files)
+    files: list[FileModel] = await files_crud.get(db=db, user=user)
+
+    return paginate([FileInDB(**file.__dict__) for file in files])
 
 
 @router.post('/upload',
@@ -53,25 +35,38 @@ async def get_files_list(
              response_model=UploadResponse,
              response_model_exclude_unset=True)
 async def upload_file(
-        path: str,
-        db: AsyncSession = Depends(get_session),    # noqa B008
-        user: User = Depends(get_current_user),    # noqa B008
-        file: UploadFile = File(),    # noqa B008
+        subdir: str = '',
+        file: UploadFile = File(),
+        db: AsyncSession = Depends(get_session),
+        user: UserModel = Depends(get_current_user),
 ) -> UploadResponse:
-    file_upload = await files_crud.create(db=db, file=file, user=user, path=path)
+    try:
+        file_upload: dict = await files_crud.create(db=db, file=file, user=user, subpath=subdir)
+    except UpladedFileExceedError:
+        raise FileNotFoundHttpError(detail='Превышен размер файла')
+    except FileNotCreatedError:
+        raise InternalServerErrorHttpError(detail='Не удалось создать файл')
+    except SQLAlchemyError:
+        raise InternalServerErrorHttpError(detail='Не удалось добавить запись о файле')
+
     return UploadResponse(**file_upload)
 
 
 @router.get('/download', description='Download user file.', response_class=FileResponse)
 async def download_file(
     *,
-    db: AsyncSession = Depends(get_session),    # noqa B008
-    user: User = Depends(get_current_user),    # noqa B008
-    identifier: Union[str, int, None] = None,
+    db: AsyncSession = Depends(get_session),
+    user: UserModel = Depends(get_current_user),
+    path_or_id: Union[str, int],
     download_folder: bool = False,
-) -> FileResponse:
-    if download_folder:
-        file = await files_crud.download_folder(user=user, path=identifier)
-    else:
-        file = await files_crud.download_file(db=db, user=user, identifier=identifier)
-    return file
+) -> Union[StreamingResponse, FileResponse]:
+
+    try:
+        if download_folder:
+            file_ = await files_crud.download_folder(user=user, subpath=str(path_or_id))
+        else:
+            file_ = await files_crud.download_file(db, user, path_or_id)
+    except FileNotFoundInStorageError:
+        raise FileNotFoundHttpError(detail='Item not found')
+
+    return file_

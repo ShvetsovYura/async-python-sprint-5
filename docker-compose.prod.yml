@@ -11,21 +11,6 @@ services:
       - pgdata:/var/lib/postgresql/data
     networks:
       - innerNetwork
-    ports:
-      - "5432:5432"
-
-  test_postgres:
-    container_name: test_pg_cnt
-    image: postgres:13
-    restart: always
-    env_file:
-      - .pg_test_env
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - innerNetwork
-    ports:
-      - "5555:5432"
 
   memcache:
     container_name: memcahe_cnt
@@ -37,8 +22,6 @@ services:
       - ./cache:/data
     networks:
       - innerNetwork
-    ports:
-      - "6379:6379"
 
   fileserver:
     container_name: fs_app_cnt
@@ -46,11 +29,9 @@ services:
     build:
       context: .
     env_file:
-      - .env.dev.sample
+      - .env.sample
     restart: always
-    command: python3 app.py
-    ports:
-      - "8001:8000"
+    command: python3 src/app.py
     networks:
       - innerNetwork
 
@@ -73,9 +54,9 @@ services:
     env_file:
       - .pg_env
     environment:
-      PGADMIN_LISTEN_PORT: 80
+      PGADMIN_LISTEN_PORT: 89
     ports:
-      - "8088:80"
+      - "8088:89"
     networks:
       - innerNetwork
     depends_on:

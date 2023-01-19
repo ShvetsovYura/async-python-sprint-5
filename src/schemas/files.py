@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel
 
+from schemas import ConfigORM
+
 
 class FileBase(BaseModel):
     name: str
@@ -16,15 +18,12 @@ class FileUpload(BaseModel):
     path: str
 
 
-class FileInDBBase(FileBase):
-    id: int
+class FileInDBBase(ConfigORM, FileBase):
+    id: int    # noqa VNE0003
     created_at: datetime
-    path: Optional[str]
+    subpath: Optional[str]
     size: int
     is_downloadable: bool
-
-    class Config:
-        orm_mode = True
 
 
 class File(FileInDBBase):
@@ -36,6 +35,5 @@ class FileInDB(FileInDBBase):
 
 
 class UploadResponse(BaseModel):
-    Ready: Optional[str] = None
-    Size: Optional[str] = None
-    Error: Optional[str] = None
+    status: Optional[str] = None
+    size: Optional[str] = None

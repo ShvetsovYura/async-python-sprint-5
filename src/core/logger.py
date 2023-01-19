@@ -13,11 +13,11 @@ ch = logging.FileHandler(
     filename=path + '/' + LOG_FILE,
     mode='w',
     encoding='utf-8',
-    delay=True
+    delay=True,
 )
 formatter: logging.Formatter = logging.Formatter(
     '%(asctime)s.%(msecs)03d - %(levelname)s - %(message)s',
-    '%Y-%m-%d %H:%M:%S'
+    '%Y-%m-%d %H:%M:%S',
 )
 ch.setFormatter(formatter)
 logger.addHandler(ch)
