@@ -19,11 +19,11 @@ class DBUserRepository(Generic[ModelType, CreateSchemaType]):
     def __init__(self, model: Type[ModelType]) -> None:
         self._model = model
 
-    async def add(self, db: AsyncSession, obj_in: CreateSchemaType) -> ModelType:
-        obj_in_data = jsonable_encoder(obj_in)
-        hashed_password = hash_password(obj_in_data.pop('password'))
-        obj_in_data['hashed_password'] = hashed_password
-        db_record = self._model(**obj_in_data)
+    async def add(self, db: AsyncSession, input_object: CreateSchemaType) -> ModelType:
+        input_object_data = jsonable_encoder(input_object)
+        hashed_password = hash_password(input_object_data.pop('password'))
+        input_object_data['hashed_password'] = hashed_password
+        db_record = self._model(**input_object_data)
         db.add(db_record)
 
         await db.commit()

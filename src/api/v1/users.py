@@ -18,11 +18,11 @@ from utils.utils import convert_to_user_dict, validate_password
 router = APIRouter()
 
 
-@router.post('/signin',
+@router.post('/signup',
              description='New user registration.',
              status_code=status.HTTP_201_CREATED,
              response_model=schema.UserBase)
-async def register_user(
+async def signup(
         user: schema.UserCreate,
         db: AsyncSession = Depends(get_session),
 ) -> schema.UserBase:
@@ -36,12 +36,12 @@ async def register_user(
     return schema.UserBase(**new_user_.__dict__)
 
 
-@router.post('/login',
+@router.post('/singin',
              description='Chek username/password and get token.',
              status_code=status.HTTP_202_ACCEPTED,
              response_model=schema.UserToken)
-async def auth(form_data: OAuth2PasswordRequestForm = Depends(),
-               db: AsyncSession = Depends(get_session)) -> schema.UserToken:
+async def signin(form_data: OAuth2PasswordRequestForm = Depends(),
+                 db: AsyncSession = Depends(get_session)) -> schema.UserToken:
     user = await user_crud.get_user_by_name(db=db, name=form_data.username)
     if not user:
         raise UserNotFoundHttpError(detail='User not found')

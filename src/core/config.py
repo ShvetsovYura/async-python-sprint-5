@@ -29,12 +29,11 @@ class AppSettings(BaseSettings):
     access_token_expire_minutes = 300
     file_folder = 'files_storage'
 
-    test_db_name = 'postgres'
+    test_db_name = 'cutter_db_test'
     test_db_pwd = '123qwe'
-    test_db_port = 5555
 
     test_db_dsn: str = (
-        f'postgresql+asyncpg://{db_user}:{test_db_pwd}@{db_host}:{test_db_port}/{test_db_name}')
+        f'postgresql+asyncpg://{db_user}:{test_db_pwd}@localhost:{db_port}/{test_db_name}')
 
     secret_key: str = ('09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7')
 

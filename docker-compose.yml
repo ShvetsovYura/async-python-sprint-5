@@ -14,19 +14,6 @@ services:
     ports:
       - "5432:5432"
 
-  test_postgres:
-    container_name: test_pg_cnt
-    image: postgres:13
-    restart: always
-    env_file:
-      - .pg_test_env
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - innerNetwork
-    ports:
-      - "5555:5432"
-
   memcache:
     container_name: memcahe_cnt
     image: redis

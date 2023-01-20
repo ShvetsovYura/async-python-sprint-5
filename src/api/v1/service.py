@@ -17,13 +17,9 @@ async def get_ping(db: AsyncSession = Depends(get_session)) -> dict:
 
     start_time_db: float = time.time()
     await db.scalar(select(1))
-
     ping_db_duration: float = time.time() - start_time_db
-
     start_time_cache: float = time.time()
-
     mem_cache.ping()
-
     ping_cache_duration = time.time() - start_time_cache
 
     return {

@@ -29,7 +29,6 @@ if __name__ == '__main__':
         host=app_settings.project_host,
         port=app_settings.project_port,
     )
-
-# Большое спасибо за замечания - провел глобальный рефакторинг и исправления =)
-# gunicorn выдает ошибку при обращении
-# __call__() missing 1 required positional argument: 'send'
+# Николай, большое спасибо за замечания!
+# Исправил
+# Большое спасибо за best practices в тестах - многое не знал

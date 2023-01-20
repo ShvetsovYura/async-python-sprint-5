@@ -32,4 +32,4 @@ class FileModel(Base):
     is_downloadable = Column(Boolean)
     author = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
     user = relationship('UserModel', back_populates='files')
-    UniqueConstraint("name", "path", name="uix_subpaths")    # noqa CCE0002
+    UniqueConstraint("name", "subpath", name="uix_subpaths")    # noqa CCE0002
